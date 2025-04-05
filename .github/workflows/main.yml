@@ -1,40 +1,40 @@
-name: 🚀 Deploy Voice Chatbot to EC2
+name: 🚀 EC2 Deployment
 
 on:
   push:
-    branches: [ main ]  # Trigger workflow on push to main branch
+    branches:
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    steps:
-    - name: 📥 Checkout code
-      uses: actions/checkout@v3
-
-    - name: 🔐 Set up SSH key
-      run: |
-        echo "$EC2_SSH_KEY" > ec2-key.pem
-        chmod 400 ec2-key.pem
-
-    - name: 🚀 Deploy via SSH
-      run: |
-        ssh -v -o StrictHostKeyChecking=no -i ec2-key.pem ec2-user@44.201.146.97 echo "SSH connection successful"
-          sudo apt update
-          sudo apt install -y docker.io git python3-pip ffmpeg
-
-          if [ ! -d "voice-chatbot" ]; then
-            git clone https://github.com/${{ github.repository }}.git voice-chatbot
-          else
-            cd voice-chatbot && git pull origin main && cd ..
-          fi
-
-          cd voice-chatbot
-          docker stop voicebot-app || true
-          docker rm voicebot-app || true
-          docker build -t voicebot-app .
-          docker run -d -p 8000:8000 --name voicebot-app voicebot-app
-        EOF
-
     env:
+      EC2_USER: ${{ secrets.EC2_USER }}
       EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+      GITHUB_REPOSITORY: ${{ github.repository }}
+
+    steps:
+      - name: 🔐 Set up SSH key
+        run: |
+          echo "$EC2_SSH_KEY" > ec2-key.pem
+          chmod 400 ec2-key.pem
+
+      - name: 🚀 Deploy via SSH
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ec2-key.pem $EC2_USER@44.201.146.97 << EOF
+            sudo apt update
+            sudo apt install -y docker.io git python3-pip ffmpeg
+
+            if [ ! -d "voice-chatbot" ]; then
+              git clone https://github.com/$GITHUB_REPOSITORY.git voice-chatbot
+            else
+              cd voice-chatbot && git pull origin main && cd ..
+            fi
+
+            cd voice-chatbot
+            sudo docker stop voicebot-app || true
+            sudo docker rm voicebot-app || true
+            sudo docker build -t voicebot-app .
+            sudo docker run -d -p 8000:8000 --name voicebot-app voicebot-app
+EOF
