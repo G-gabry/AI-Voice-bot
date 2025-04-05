@@ -1,4 +1,4 @@
-name: 🚀 Deploy Voice Chatbot to EC2
+name: 🚀 Deploy Voice Chatbot to EC2omar
 
 on:
   push:
