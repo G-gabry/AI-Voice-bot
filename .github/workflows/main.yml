@@ -23,6 +23,7 @@ jobs:
       - name: 🚀 Deploy via SSH
         run: |
           ssh -o StrictHostKeyChecking=no -i ec2-key.pem $EC2_USER@44.201.146.97 '
+            echo "Connected successfully to EC2"
             set -ex
             sudo apt update
             sudo apt install -y docker.io git python3-pip ffmpeg
