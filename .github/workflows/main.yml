@@ -22,34 +22,35 @@ jobs:
 
       - name: 🚀 Deploy via SSH
         run: |
-          ssh -o StrictHostKeyChecking=no -i ec2-key.pem $EC2_USER@44.201.146.97 "
-            echo '✅ Connected to EC2'
+          echo "📡 Trying to connect to EC2..."
+          ssh -v -o StrictHostKeyChecking=no -i ec2-key.pem $EC2_USER@44.201.146.97 '
+            echo "✅ Connected to EC2"
 
-            echo '🔧 Updating system'
-            sudo yum update -y || { echo '❌ yum update failed'; exit 1; }
+            echo "🔧 Updating system"
+            sudo yum update -y || { echo "❌ yum update failed"; exit 1; }
 
-            echo '🔧 Enabling Docker'
-            sudo amazon-linux-extras enable docker || { echo '❌ docker enable failed'; exit 1; }
+            echo "🔧 Enabling docker"
+            sudo amazon-linux-extras enable docker || { echo "❌ docker enable failed"; exit 1; }
 
-            echo '🔧 Installing packages'
-            sudo yum install -y docker git python3-pip ffmpeg || { echo '❌ package install failed'; exit 1; }
+            echo "📦 Installing packages"
+            sudo yum install -y docker git python3-pip ffmpeg || { echo "❌ package install failed"; exit 1; }
 
-            echo '🚀 Starting Docker'
-            sudo service docker start || { echo '❌ docker start failed'; exit 1; }
+            echo "🚀 Starting docker"
+            sudo service docker start || { echo "❌ docker start failed"; exit 1; }
 
-            echo '📦 Cloning or updating repo'
-            if [ ! -d 'voice-chatbot' ]; then
-              git clone https://github.com/${GITHUB_REPOSITORY}.git voice-chatbot || { echo '❌ git clone failed'; exit 1; }
+            echo "🔄 Cloning/updating repository"
+            if [ ! -d "voice-chatbot" ]; then
+              git clone https://github.com/${GITHUB_REPOSITORY}.git voice-chatbot || { echo "❌ git clone failed"; exit 1; }
             else
-              cd voice-chatbot && git pull origin main && cd .. || { echo '❌ git pull failed'; exit 1; }
+              cd voice-chatbot && git pull origin main && cd .. || { echo "❌ git pull failed"; exit 1; }
             fi
 
-            echo '🐳 Deploying Docker app'
+            echo "🐳 Running Docker container"
             cd voice-chatbot
             sudo docker stop voicebot-app || true
             sudo docker rm voicebot-app || true
-            sudo docker build -t voicebot-app . || { echo '❌ docker build failed'; exit 1; }
-            sudo docker run -d -p 8000:8000 --name voicebot-app voicebot-app || { echo '❌ docker run failed'; exit 1; }
+            sudo docker build -t voicebot-app . || { echo "❌ docker build failed"; exit 1; }
+            sudo docker run -d -p 8000:8000 --name voicebot-app voicebot-app || { echo "❌ docker run failed"; exit 1; }
 
-            echo '✅ Deployment completed successfully'
-          "
+            echo "✅ Deployment finished!"
+          '
