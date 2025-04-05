@@ -19,7 +19,7 @@ jobs:
 
     - name: 🚀 Deploy via SSH
       run: |
-        ssh -o StrictHostKeyChecking=no -i ec2-key.pem ec2-user@44.201.146.97 << 'EOF'
+        ssh -v -o StrictHostKeyChecking=no -i ec2-key.pem ec2-user@44.201.146.97 echo "SSH connection successful"
           sudo apt update
           sudo apt install -y docker.io git python3-pip ffmpeg
 
