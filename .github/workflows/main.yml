@@ -1,8 +1,8 @@
-name: 🚀 Deploy Voice Chatbot to EC2omar
+name: 🚀 Deploy Voice Chatbot to EC2
 
 on:
   push:
-    branches: [ main ]  # Trigger on push to main branch
+    branches: [ main ]  # Trigger workflow on push to main branch
 
 jobs:
   deploy:
@@ -19,11 +19,10 @@ jobs:
 
     - name: 🚀 Deploy via SSH
       run: |
-          ssh -o StrictHostKeyChecking=no -i ec2-key.pem ec2-user@44.201.146.97 << 'EOF'
+        ssh -o StrictHostKeyChecking=no -i ec2-key.pem ec2-user@44.201.146.97 << 'EOF'
           sudo apt update
           sudo apt install -y docker.io git python3-pip ffmpeg
 
-          # Pull latest code
           if [ ! -d "voice-chatbot" ]; then
             git clone https://github.com/${{ github.repository }}.git voice-chatbot
           else
@@ -31,17 +30,11 @@ jobs:
           fi
 
           cd voice-chatbot
-
-          # Stop previous container
           docker stop voicebot-app || true
           docker rm voicebot-app || true
-
-          # Build and run updated container
           docker build -t voicebot-app .
           docker run -d -p 8000:8000 --name voicebot-app voicebot-app
         EOF
 
     env:
       EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-      EC2_USER: ${{ secrets.EC2_USER }}
-      EC2_HOST: 44.201.146.97
