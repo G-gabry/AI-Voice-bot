@@ -22,11 +22,12 @@ jobs:
 
       - name: 🚀 Deploy via SSH
         run: |
-          ssh -o StrictHostKeyChecking=no -i ec2-key.pem $EC2_USER@44.201.146.97 << EOF
+          ssh -o StrictHostKeyChecking=no -i ec2-key.pem $EC2_USER@44.201.146.97 bash -c "'
+            set -e
             sudo apt update
             sudo apt install -y docker.io git python3-pip ffmpeg
 
-            if [ ! -d "voice-chatbot" ]; then
+            if [ ! -d \"voice-chatbot\" ]; then
               git clone https://github.com/$GITHUB_REPOSITORY.git voice-chatbot
             else
               cd voice-chatbot && git pull origin main && cd ..
@@ -37,4 +38,4 @@ jobs:
             sudo docker rm voicebot-app || true
             sudo docker build -t voicebot-app .
             sudo docker run -d -p 8000:8000 --name voicebot-app voicebot-app
-EOF
+          '"
