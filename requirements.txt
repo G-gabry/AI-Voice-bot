@@ -1,0 +1,11 @@
+Flask
+gunicorn
+openai-whisper
+edge-tts
+pydub
+ffmpeg-python
+numpy
+soundfile
+librosa
+openai-whisper
+scipy

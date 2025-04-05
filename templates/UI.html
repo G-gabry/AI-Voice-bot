@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Chatbot</title>
+  <style>
+    body {
+      background: #121212;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+
+    h1 {
+      color: #00ffe0;
+      font-size: 2rem;
+    }
+
+    #response-box {
+      max-width: 600px;
+      margin: 30px auto;
+      padding: 20px;
+      background: #1e1e1e;
+      border-radius: 15px;
+      font-size: 20px;
+      box-shadow: 0 0 20px rgba(0, 255, 224, 0.2);
+    }
+
+    canvas {
+      display: block;
+      margin: 20px auto;
+      border-radius: 10px;
+      background: #1e1e1e;
+      box-shadow: 0 0 10px rgba(0, 255, 224, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <h1>🎧 Talk to the Assistant</h1>
+  <div id="response-box">🤖 Assistant: Waiting for your voice...</div>
+  <canvas id="waveform" width="600" height="100"></canvas>
+  <audio id="botAudio" style="display: none;"></audio>
+
+  <script>
+    let mediaRecorder;
+    let audioChunks = [];
+    let audioContext;
+    let analyser;
+    let stream;
+    let silenceTimer;
+    let speaking = false;
+
+    async function startRealTimeConversation() {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioContext = new AudioContext();
+      const source = audioContext.createMediaStreamSource(stream);
+      analyser = audioContext.createAnalyser();
+      source.connect(analyser);
+
+      drawWaveform();
+
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        audioChunks = [];
+
+        const formData = new FormData();
+        formData.append("audio", audioBlob);
+
+        const res = await fetch("/speak", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await res.json();
+        document.getElementById("response-box").innerText = `🤖 Assistant: ${data.response}`;
+
+        const audio = document.getElementById("botAudio");
+        const byteChars = atob(data.audio_data);
+        const byteNumbers = new Array(byteChars.length);
+        for (let i = 0; i < byteChars.length; i++) {
+          byteNumbers[i] = byteChars.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const botBlob = new Blob([byteArray], { type: "audio/mp3" });
+        const botURL = URL.createObjectURL(botBlob);
+
+        audio.src = botURL;
+        audio.style.display = "block";
+        audio.play();
+
+        await new Promise(resolve => audio.onended = resolve);
+        listenForSpeech();
+      };
+
+      listenForSpeech();
+    }
+
+    function listenForSpeech() {
+      const bufferLength = analyser.fftSize;
+      const dataArray = new Uint8Array(bufferLength);
+
+      const checkVolume = () => {
+        analyser.getByteTimeDomainData(dataArray);
+        let sum = 0;
+        for (let i = 0; i < bufferLength; i++) {
+          const value = (dataArray[i] - 128) / 128;
+          sum += value * value;
+        }
+        const volume = Math.sqrt(sum / bufferLength);
+
+        if (volume > 0.02) {
+          if (!speaking) {
+            speaking = true;
+            mediaRecorder.start();
+          }
+          clearTimeout(silenceTimer);
+          silenceTimer = setTimeout(stopRecording, 700);
+        }
+        requestAnimationFrame(checkVolume);
+      };
+
+      speaking = false;
+      requestAnimationFrame(checkVolume);
+    }
+
+    function stopRecording() {
+      if (mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+      }
+    }
+
+    function drawWaveform() {
+      const canvas = document.getElementById("waveform");
+      const ctx = canvas.getContext("2d");
+      const bufferLength = analyser.fftSize;
+      const dataArray = new Uint8Array(bufferLength);
+
+      const draw = () => {
+        requestAnimationFrame(draw);
+        analyser.getByteTimeDomainData(dataArray);
+
+        ctx.fillStyle = "#1e1e1e";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#00ffe0";
+        ctx.beginPath();
+
+        const sliceWidth = canvas.width / bufferLength;
+        let x = 0;
+
+        for (let i = 0; i < bufferLength; i++) {
+          const v = dataArray[i] / 128.0;
+          const y = (v * canvas.height) / 2;
+
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+
+          x += sliceWidth;
+        }
+
+        ctx.lineTo(canvas.width, canvas.height / 2);
+        ctx.stroke();
+      };
+
+      draw();
+    }
+
+    window.onload = startRealTimeConversation;
+  </script>
+</body>
+</html>
