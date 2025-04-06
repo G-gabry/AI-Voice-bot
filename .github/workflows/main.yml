@@ -29,9 +29,6 @@ jobs:
             echo "🔧 Updating system"
             sudo yum update -y || { echo "❌ yum update failed"; exit 1; }
 
-            echo "🔧 Enabling Docker"
-            sudo amazon-linux-extras enable docker || { echo "❌ docker enable failed"; exit 1; }
-
             echo "📦 Installing packages"
             sudo yum install -y docker git python3-pip ffmpeg || { echo "❌ package install failed"; exit 1; }
 
