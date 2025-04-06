@@ -9,7 +9,7 @@ import ollama
 
 def get_ai_response(user_text):
     response = ollama.chat(
-        model='gemma:2b',
+        model='tinyllama',
         messages=[
             {"role": "system", "content": "You are a warm, conversational AI voice assistant. Always reply like you're speaking to a real person in a natural, friendly tone. Your answers must be easy to understand, limited to **one or two clear sentences**, and **never more than 15 words**. Avoid repeating the question or over-explaining. Speak like a helpful human — casual, not robotic."
 },
