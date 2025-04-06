@@ -10,9 +10,9 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      EC2_USER: ${{ secrets.EC2_USER }}
-      EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
       GITHUB_REPOSITORY: ${{ github.repository }}
+      EC2_USER: ec2-user
+      EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
 
     steps:
       - name: 🔐 Set up SSH key
@@ -22,23 +22,23 @@ jobs:
 
       - name: 🚀 Deploy via SSH
         run: |
-          echo "📡 Trying to connect to EC2..."
-          ssh -v -o StrictHostKeyChecking=no -i ec2-key.pem $EC2_USER@44.201.146.97 '
+          echo "📡 Connecting to EC2..."
+          ssh -v -o StrictHostKeyChecking=no -i ec2-key.pem $EC2_USER@ec2-44-201-146-97.compute-1.amazonaws.com '
             echo "✅ Connected to EC2"
 
             echo "🔧 Updating system"
             sudo yum update -y || { echo "❌ yum update failed"; exit 1; }
 
-            echo "🔧 Enabling docker"
+            echo "🔧 Enabling Docker"
             sudo amazon-linux-extras enable docker || { echo "❌ docker enable failed"; exit 1; }
 
             echo "📦 Installing packages"
             sudo yum install -y docker git python3-pip ffmpeg || { echo "❌ package install failed"; exit 1; }
 
-            echo "🚀 Starting docker"
+            echo "🚀 Starting Docker"
             sudo service docker start || { echo "❌ docker start failed"; exit 1; }
 
-            echo "🔄 Cloning/updating repository"
+            echo "🔄 Cloning or updating repo"
             if [ ! -d "voice-chatbot" ]; then
               git clone https://github.com/${GITHUB_REPOSITORY}.git voice-chatbot || { echo "❌ git clone failed"; exit 1; }
             else
