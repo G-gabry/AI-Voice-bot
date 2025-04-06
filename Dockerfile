@@ -11,25 +11,36 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     build-essential \
     libsndfile1 \
+    libsndfile1-dev \
+    libffi-dev \
+    libssl-dev \
+    liblapack-dev \
+    gfortran \
+    libblas-dev \
+    libatlas-base-dev \
+    libstdc++6 \
+    pkg-config \
  && rm -rf /var/lib/apt/lists/*
 
 # Install Ollama
 RUN curl -fsSL https://ollama.com/install.sh | sh
 
-# Optionally preload model (remove if you prefer pull at runtime)
+# Optionally preload model
 RUN ollama serve & sleep 12 && ollama pull phi
 
-# Copy only requirements first for better caching and faster builds
+# Copy and install Python dependencies
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --upgrade pip && pip install -r requirements.txt
+# Install torch before whisper
+RUN pip install --upgrade pip && \
+    pip install torch --extra-index-url https://download.pytorch.org/whl/cpu && \
+    pip install -r requirements.txt
 
-# Now copy the rest of the app
+# Copy the rest of the project
 COPY . .
 
-# Expose port your app runs on
+# Expose app port
 EXPOSE 8000
 
-# Start Ollama and your Flask app with Gunicorn
+# Start Ollama and your Flask app
 CMD bash -c "ollama serve & gunicorn -w 4 -b 0.0.0.0:8000 main:app"
