@@ -1,12 +1,10 @@
-# Use a more compatible slim base
-FROM python:3.10-slim-bullseye
+FROM python:3.10
 
-# Set working directory
 WORKDIR /app
 
-# Install system-level dependencies
+# Install all system dependencies
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+    apt-get install -y \
         curl \
         git \
         ffmpeg \
@@ -19,28 +17,26 @@ RUN apt-get update && \
         pkg-config \
         libstdc++6 \
         libblas-dev \
-        liblapack3 && \
-    rm -rf /var/lib/apt/lists/*
+        liblapack-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Ollama
 RUN curl -fsSL https://ollama.com/install.sh | sh
 
-# Preload model (optional step)
+# Optionally preload model
 RUN ollama serve & sleep 12 && ollama pull phi
 
-# Copy requirements and install Python dependencies
+# Copy requirements first for caching
 COPY requirements.txt .
 
+# Install pip packages
 RUN pip install --upgrade pip && \
     pip install torch --extra-index-url https://download.pytorch.org/whl/cpu && \
     pip install -r requirements.txt
 
-# Copy the rest of the code
+# Copy the rest of the app
 COPY . .
 
-# Expose port
 EXPOSE 8000
 
-# Start Ollama and the Flask app
 CMD bash -c "ollama serve & gunicorn -w 4 -b 0.0.0.0:8000 main:app"
-
