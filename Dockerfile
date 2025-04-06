@@ -2,7 +2,7 @@ FROM python:3.10
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependenciess
 RUN apt-get update && apt-get install -y \
     curl \
     git \
