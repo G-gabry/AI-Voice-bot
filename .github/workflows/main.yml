@@ -53,10 +53,10 @@ jobs:
 
             echo "🐳 Running Docker container"
             cd voice-chatbot
-            sudo docker stop voicebot-app || true
-            sudo docker rm voicebot-app || true
-            sudo docker build -t voicebot-app . || { echo "❌ docker build failed"; exit 1; }
-            sudo docker run -d -p 8000:8000 --name voicebot-app voicebot-app || { echo "❌ docker run failed"; exit 1; }
+            sudo docker stop voicebot || true
+            sudo docker rm voicebot || true
+            sudo docker build -t voicebot . || { echo "❌ docker build failed"; exit 1; }
+            sudo docker run -d -p 8000:8000 --name voicebot voicebot || { echo "❌ docker run failed"; exit 1; }
 
             echo "✅ Deployment finished!"
           '
