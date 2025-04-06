@@ -1,4 +1,4 @@
-name: 🚀 EC2 DeploymentGabryomarali
+name: 🚀 EC2 DeploymentGabry
 
 on:
   push:
@@ -32,12 +32,12 @@ jobs:
             echo "📦 Repo: $GITHUB_REPO"
 
             echo "🔧 Updating system"
-            sudo dnf update -y || { echo "❌ dnf update failed"; exit 1; }
+            sudo yum update -y || { echo "❌ yum update failed"; exit 1; }
 
             echo "📦 Installing base packages"
-            sudo dnf install -y docker git python3-pip || { echo "❌ dnf install failed"; exit 1; }
+            sudo yum install -y docker git python3-pip ffmpeg || { echo "❌ package install failed"; exit 1; }
 
-            echo "🚀 Enabling and starting Docker"
+            echo "🚀 Starting Docker"
             sudo systemctl enable docker || { echo "❌ docker enable failed"; exit 1; }
             sudo systemctl start docker || { echo "❌ docker start failed"; exit 1; }
 
