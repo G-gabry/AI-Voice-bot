@@ -24,7 +24,7 @@ RUN apt-get update && apt-get install -y \
 RUN curl -fsSL https://ollama.com/install.sh | sh
 
 # Preload model (optional)
-RUN ollama serve & sleep 12 && ollama pull gemma:2b
+
 
 # Create self-signed SSL cert
 RUN mkdir -p /app/ssl && \
@@ -44,4 +44,5 @@ COPY . .
 
 EXPOSE 8000
 
-CMD bash -c "ollama serve & gunicorn --certfile=ssl/cert.pem --keyfile=ssl/key.pem -w 4 -b 0.0.0.0:8000 main:app"
+CMD bash -c "ollama serve & sleep 15 && ollama pull gemma:2b && gunicorn --certfile=ssl/cert.pem --keyfile=ssl/key.pem -w 2 -b 0.0.0.0:8000 main:app"
+
