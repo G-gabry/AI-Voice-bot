@@ -19,11 +19,14 @@ RUN curl -fsSL https://ollama.com/install.sh | sh
 # Optionally preload model (remove if you prefer pull at runtime)
 RUN ollama serve & sleep 12 && ollama pull phi
 
-# Copy your project files
-COPY . .
+# Copy only requirements first for better caching and faster builds
+COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --upgrade pip && pip install -r requirements.txt
+
+# Now copy the rest of the app
+COPY . .
 
 # Expose port your app runs on
 EXPOSE 8000
