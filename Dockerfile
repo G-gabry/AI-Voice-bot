@@ -24,7 +24,7 @@ RUN apt-get update && apt-get install -y \
 RUN curl -fsSL https://ollama.com/install.sh | sh
 
 # Preload model (optional)
-RUN ollama serve & sleep 12 && ollama pull tinyllama
+RUN ollama serve & sleep 12 && ollama pull gemma:2b
 
 # Create self-signed SSL cert
 RUN mkdir -p /app/ssl && \
