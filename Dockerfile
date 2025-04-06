@@ -23,8 +23,8 @@ RUN apt-get update && apt-get install -y \
 # Install Ollama
 RUN curl -fsSL https://ollama.com/install.sh | sh
 
-# Preload model (optional)
-
+# ✅ Preload model at build time
+RUN ollama serve & sleep 15 && ollama pull tinyllama
 
 # Create self-signed SSL cert
 RUN mkdir -p /app/ssl && \
@@ -33,16 +33,16 @@ RUN mkdir -p /app/ssl && \
     -out /app/ssl/cert.pem \
     -subj "/CN=localhost"
 
-# Copy requirements and install packages
+# Install Python requirements
 COPY requirements.txt .
 RUN pip install --upgrade pip && \
     pip install torch --extra-index-url https://download.pytorch.org/whl/cpu && \
     pip install -r requirements.txt
 
-# Copy app code
+# Copy the rest of the app
 COPY . .
 
 EXPOSE 8000
 
-CMD bash -c "ollama serve & sleep 15 && ollama pull tinyllama && gunicorn --certfile=ssl/cert.pem --keyfile=ssl/key.pem -w 2 -b 0.0.0.0:8000 main:app"
-
+# Start Ollama and Flask server with Gunicorn
+CMD bash -c "ollama serve & gunicorn --certfile=ssl/cert.pem --keyfile=ssl/key.pem -w 2 -b 0.0.0.0:8000 main:app"
