@@ -65,37 +65,53 @@
       mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        audioChunks = [];
+  const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+  audioChunks = [];
 
-        const formData = new FormData();
-        formData.append("audio", audioBlob);
+  const formData = new FormData();
+  formData.append("audio", audioBlob);
 
-        const res = await fetch("https://52.201.244.25:8000/speak", {
-          method: "POST",
-          body: formData
-        });
+  try {
+    const res = await fetch("https://52.201.244.25:8000/speak", {
+      method: "POST",
+      body: formData
+    });
 
-        const data = await res.json();
-        document.getElementById("response-box").innerText = `🤖 Assistant: ${data.response}`;
+    const data = await res.json();
 
-        const audio = document.getElementById("botAudio");
-        const byteChars = atob(data.audio_data);
-        const byteNumbers = new Array(byteChars.length);
-        for (let i = 0; i < byteChars.length; i++) {
-          byteNumbers[i] = byteChars.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        const botBlob = new Blob([byteArray], { type: "audio/mp3" });
-        const botURL = URL.createObjectURL(botBlob);
+    // ✅ Check if there's an error or missing audio
+    if (!data.audio_data || data.error) {
+      console.error("❌ Invalid response:", data.error || "Missing audio_data");
+      document.getElementById("response-box").innerText = `❌ Assistant Error: ${data.error || 'No audio returned'}`;
+      return;
+    }
 
-        audio.src = botURL;
-        audio.style.display = "block";
-        audio.play();
+    document.getElementById("response-box").innerText = `🤖 Assistant: ${data.response}`;
 
-        await new Promise(resolve => audio.onended = resolve);
-        listenForSpeech();
-      };
+    // ✅ Decode base64 audio
+    const byteChars = atob(data.audio_data);
+    const byteNumbers = new Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) {
+      byteNumbers[i] = byteChars.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const botBlob = new Blob([byteArray], { type: "audio/mp3" });
+    const botURL = URL.createObjectURL(botBlob);
+
+    const audio = document.getElementById("botAudio");
+    audio.src = botURL;
+    audio.style.display = "block";
+    audio.play();
+
+    await new Promise(resolve => audio.onended = resolve);
+    listenForSpeech();
+
+  } catch (err) {
+    console.error("❌ Fetch or decoding failed:", err);
+    document.getElementById("response-box").innerText = "❌ Error: could not reach the assistant.";
+  }
+};
+
 
       listenForSpeech();
     }
