@@ -25,21 +25,21 @@ jobs:
       - name: 🚀 Deploy via SSH
         run: |
           echo "📡 Connecting to EC2..."
-          ssh -v -o StrictHostKeyChecking=no -i ec2-key.pem $EC2_USER@ec2-13-218-89-155.compute-1.amazonaws.com
-
+          ssh -v -o StrictHostKeyChecking=no -i ec2-key.pem $EC2_USER@ec2-13-218-89-155.compute-1.amazonaws.com '
             echo "✅ Connected to EC2"
 
             GITHUB_REPO="'"${{ github.repository }}"'"
             echo "📦 Repo: $GITHUB_REPO"
 
             echo "🔧 Updating system"
-            sudo yum update -y || { echo "❌ yum update failed"; exit 1; }
+            sudo dnf update -y || { echo "❌ dnf update failed"; exit 1; }
 
             echo "📦 Installing base packages"
-            sudo yum install -y docker git python3-pip || { echo "❌ base package install failed"; exit 1; }
+            sudo dnf install -y docker git python3-pip || { echo "❌ dnf install failed"; exit 1; }
 
-            echo "🚀 Starting Docker"
-            sudo service docker start || { echo "❌ docker start failed"; exit 1; }
+            echo "🚀 Enabling and starting Docker"
+            sudo systemctl enable docker || { echo "❌ docker enable failed"; exit 1; }
+            sudo systemctl start docker || { echo "❌ docker start failed"; exit 1; }
 
             echo "🔄 Cloning or updating repo"
             if [ ! -d "voice-chatbot" ]; then
@@ -47,7 +47,10 @@ jobs:
             else
               cd voice-chatbot && git pull origin main && cd .. || { echo "❌ git pull failed"; exit 1; }
             fi
-            echo "🧹 Cleaning up Docker"            
+
+            echo "🧹 Cleaning up Docker"
+            docker system prune -af --volumes || true
+
             echo "🐳 Running Docker container"
             cd voice-chatbot
             sudo docker stop voicebot-app || true
@@ -57,5 +60,3 @@ jobs:
 
             echo "✅ Deployment finished!"
           '
-
-    
