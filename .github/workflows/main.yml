@@ -25,7 +25,7 @@ jobs:
       - name: 🚀 Deploy via SSH
         run: |
           echo "📡 Connecting to EC2..."
-          ssh -v -o StrictHostKeyChecking=no -i ec2-key.pem $EC2_USER@ec2-52-201-244-25.compute-1.amazonaws.com '
+          ssh -v -o StrictHostKeyChecking=no -i ec2-key.pem $EC2_USER@ec2-54-221-147-33.compute-1.amazonaws.com '
             echo "✅ Connected to EC2"
 
             GITHUB_REPO="'"${{ github.repository }}"'"
