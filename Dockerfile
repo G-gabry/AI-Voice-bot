@@ -23,15 +23,8 @@ RUN apt-get update && apt-get install -y \
 # Install Ollama
 RUN curl -fsSL https://ollama.com/install.sh | sh
 
-# ✅ Preload model at build time
-RUN ollama serve & sleep 15 && ollama pull tinyllama
 
-# Create self-signed SSL cert
-RUN mkdir -p /app/ssl && \
-    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-    -keyout /app/ssl/key.pem \
-    -out /app/ssl/cert.pem \
-    -subj "/CN=localhost"
+
 
 # Install Python requirements
 COPY requirements.txt .
@@ -45,4 +38,5 @@ COPY . .
 EXPOSE 8000
 
 # Start Ollama and Flask server with Gunicorn
-CMD bash -c "ollama serve & gunicorn --certfile=ssl/cert.pem --keyfile=ssl/key.pem -w 2 -b 0.0.0.0:8000 main:app"
+CMD bash -c "ollama serve & sleep 10 && ollama pull tinyllama && gunicorn -w 2 -b 0.0.0.0:8000 main:app"
+
