@@ -46,7 +46,8 @@ jobs:
             else
               cd voice-chatbot && git pull origin main && cd .. || { echo "❌ git pull failed"; exit 1; }
             fi
-
+            echo "🧹 Cleaning up Docker"
+            docker system prune -af --volumes || true 
             echo "🐳 Running Docker container"
             cd voice-chatbot
             sudo docker stop voicebot-app || true
