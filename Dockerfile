@@ -44,5 +44,5 @@ COPY . .
 
 EXPOSE 8000
 
-CMD bash -c "ollama serve & sleep 15 && ollama pull gemma:2b && gunicorn --certfile=ssl/cert.pem --keyfile=ssl/key.pem -w 2 -b 0.0.0.0:8000 main:app"
+CMD bash -c "ollama serve & sleep 15 && ollama pull tinyllama && gunicorn --certfile=ssl/cert.pem --keyfile=ssl/key.pem -w 2 -b 0.0.0.0:8000 main:app"
 
