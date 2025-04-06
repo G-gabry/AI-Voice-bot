@@ -25,8 +25,11 @@ jobs:
       - name: 🚀 Deploy via SSH
         run: |
           echo "📡 Connecting to EC2..."
-          ssh -v -o StrictHostKeyChecking=no -i ec2-key.pem GITHUB_REPO=${{ github.repository }} $EC2_USER@ec2-44-201-146-97.compute-1.amazonaws.com '
+          ssh -v -o StrictHostKeyChecking=no -i ec2-key.pem $EC2_USER@ec2-44-201-146-97.compute-1.amazonaws.com '
             echo "✅ Connected to EC2"
+
+            GITHUB_REPO="'"${{ github.repository }}"'"
+            echo "📦 Repo: $GITHUB_REPO"
 
             echo "🔧 Updating system"
             sudo yum update -y || { echo "❌ yum update failed"; exit 1; }
