@@ -8,8 +8,7 @@ from text_to_speech import text_to_speech
 from utils import convert_webm_to_wav  # You will create this helper function
 
 app = Flask(__name__)
-CORS(app)
-
+CORS(app, origins="*")  # Or replace * with your frontend URL if you want more security
 
 
 def process_and_clean_audio(filename):
