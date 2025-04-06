@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
 import base64
 import os
 from DSP import apply_bandpass_filter, remove_noise_fft, normalize_audio
@@ -7,6 +8,8 @@ from text_to_speech import text_to_speech
 from utils import convert_webm_to_wav  # You will create this helper function
 
 app = Flask(__name__)
+CORS(app)
+
 
 
 def process_and_clean_audio(filename):
