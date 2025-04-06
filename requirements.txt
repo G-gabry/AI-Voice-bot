@@ -1,4 +1,4 @@
-Flask
+flask-cors
 gunicorn
 openai-whisper
 edge-tts
