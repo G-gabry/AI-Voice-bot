@@ -44,4 +44,5 @@ COPY . .
 
 EXPOSE 8000
 
-CMD bash -c "ollama serve & gunicorn --certfile=ssl/cert.pem --keyfile=ssl/key.pem -w 4 -b 0.0.0.0:8000 main:app"
+CMD bash -c "ollama serve & gunicorn --timeout 120 --worker-class gthread --threads 4 --certfile=ssl/cert.pem --keyfile=ssl/key.pem -w 1 -b 0.0.0.0:8000 main:app"
+
