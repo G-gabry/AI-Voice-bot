@@ -27,6 +27,39 @@ def index():
 
 @app.route('/speak', methods=['POST'])
 def speak():
+
+    # 1. Receive audio from browser
+    if 'audio' not in request.files:
+        return jsonify({"error": "No audio file received"}), 400
+
+    audio_file = request.files['audio']
+    webm_path = "user_voice.webm"
+    wav_path = "user_voice.wav"
+    audio_file.save(webm_path)
+
+    # 2. Convert WebM to WAV
+    convert_webm_to_wav(webm_path, wav_path)
+
+    # 3. Clean audio
+    cleaned_audio = process_and_clean_audio(wav_path)
+
+    # 4. Speech-to-text
+    user_text = convert_speech_to_text(cleaned_audio)
+    print(f"🗣 You: {user_text}")
+
+    # 5. AI response
+    ai_response = get_ai_response(user_text)
+
+
+    # 6. Text-to-speech
+    audio_bytes = text_to_speech(ai_response)
+    audio_base64 = base64.b64encode(audio_bytes).decode("utf-8")
+
+    return jsonify({
+        "response": ai_response,
+        "audio_data": audio_base64
+    })
+
     try:
         if 'audio' not in request.files:
             return jsonify({"error": "No audio file received"}), 400
@@ -54,6 +87,7 @@ def speak():
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
 
 
 if __name__ == "__main__":
