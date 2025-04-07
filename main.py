@@ -39,6 +39,8 @@ def speak():
         convert_webm_to_wav(webm_path, wav_path)
         cleaned_audio = process_and_clean_audio(wav_path)
         user_text = convert_speech_to_text(cleaned_audio)
+        app.logger.info(f"User voice input converted to text: {user_text}")
+        print(f"DEBUG - User said: {user_text}")  # Also print to console
         ai_response = get_ai_response(user_text)
         audio_bytes = text_to_speech(ai_response)
         audio_base64 = base64.b64encode(audio_bytes).decode("utf-8")
