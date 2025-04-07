@@ -1,0 +1,62 @@
+name: 🚀 EC2 DeploymentGabryomaralii
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      EC2_USER: ec2-user
+      EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+
+    steps:
+      - name: 🔐 Set up SSH key
+        run: |
+          echo "$EC2_SSH_KEY" > ec2-key.pem
+          chmod 400 ec2-key.pem
+
+      - name: 🚀 Deploy via SSH
+        run: |
+          echo "📡 Connecting to EC2..."
+          ssh -v -o StrictHostKeyChecking=no -i ec2-key.pem $EC2_USER@ec2-54-81-94-8.compute-1.amazonaws.com '
+            echo "✅ Connected to EC2"
+
+            GITHUB_REPO="'"${{ github.repository }}"'"
+            echo "📦 Repo: $GITHUB_REPO"
+
+            echo "🔧 Updating system"
+            sudo yum update -y || { echo "❌ yum update failed"; exit 1; }
+
+            echo "📦 Installing base packages"
+            sudo yum install -y docker git python3-pip ffmpeg || { echo "❌ package install failed"; exit 1; }
+
+            echo "🚀 Starting Docker"
+            sudo systemctl enable docker || { echo "❌ docker enable failed"; exit 1; }
+            sudo systemctl start docker || { echo "❌ docker start failed"; exit 1; }
+
+            echo "🔄 Cloning or updating repo"
+            if [ ! -d "voice-chatbot" ]; then
+              git clone https://github.com/$GITHUB_REPO.git voice-chatbot || { echo "❌ git clone failed"; exit 1; }
+            else
+              cd voice-chatbot && git pull origin main && cd .. || { echo "❌ git pull failed"; exit 1; }
+            fi
+
+            echo "🧹 Cleaning up Docker"
+            docker system prune -af --volumes || true
+
+            echo "🐳 Running Docker container"
+            cd voice-chatbot
+            sudo docker stop voicebot || true
+            sudo docker rm voicebot || true
+            sudo docker build -t voicebot . || { echo "❌ docker build failed"; exit 1; }
+            sudo docker run -d -p 8000:8000 --name voicebot voicebot || { echo "❌ docker run failed"; exit 1; }
+
+            echo "✅ Deployment finished!"
+          '

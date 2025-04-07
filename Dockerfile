@@ -1,32 +1,48 @@
-# Use official Python base image
-FROM python:3.10-slim
+FROM python:3.10
 
-# Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependenciess
 RUN apt-get update && apt-get install -y \
     curl \
     git \
     ffmpeg \
     build-essential \
     libsndfile1 \
+    libsndfile1-dev \
+    libffi-dev \
+    libssl-dev \
+    gfortran \
+    pkg-config \
+    libstdc++6 \
+    libblas-dev \
+    liblapack-dev \
+    openssl \
  && rm -rf /var/lib/apt/lists/*
 
 # Install Ollama
 RUN curl -fsSL https://ollama.com/install.sh | sh
 
-# Optionally preload model (remove if you prefer pull at runtime)
-RUN ollama serve & sleep 12 && ollama pull phi
+# Preload model (optional)
+RUN ollama serve & sleep 12 && ollama pull tinyllama
 
-# Copy your project files
+# Create self-signed SSL cert
+RUN mkdir -p /app/ssl && \
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+    -keyout /app/ssl/key.pem \
+    -out /app/ssl/cert.pem \
+    -subj "/CN=localhost"
+
+# Copy requirements and install packages
+COPY requirements.txt .
+RUN pip install --upgrade pip && \
+    pip install torch --extra-index-url https://download.pytorch.org/whl/cpu && \
+    pip install -r requirements.txt
+
+# Copy app code
 COPY . .
 
-# Install Python dependencies
-RUN pip install --upgrade pip && pip install -r requirements.txt
-
-# Expose port your app runs on
 EXPOSE 8000
 
-# Start Ollama and your Flask app with Gunicorn
-CMD bash -c "ollama serve & gunicorn -w 4 -b 0.0.0.0:8000 main:app"
+CMD bash -c "ollama serve & gunicorn --timeout 120 --worker-class gthread --threads 4 --certfile=ssl/cert.pem --keyfile=ssl/key.pem -w 1 -b 0.0.0.0:8000 main:app"
+
